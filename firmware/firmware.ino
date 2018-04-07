@@ -19,6 +19,7 @@ boolean  dir_b       = true;
 boolean  enabled_b   = true;
 
 WiFiManager wifiManager;
+WiFiServer wifiServer;
 
 void setup() { 
   #ifdef DEBUG
@@ -54,7 +55,17 @@ void setup() {
 
 void loop() {
   
-  // TODO process the webserver settings (parallalize it)
+  WiFiClient client = server.available();
+  if (client)
+  { 
+    // TODO process the webserver settings (parallalize it)
+    String request = client.readStringUntil('\r');
+    if (request.indexOf("/EN") != -1){ 
+      enabled_b = true;
+    else if (request.indexOf("/DIS") != -1){ 
+      enabled_b = false;
+    }
+  } 
 
   digitalWrite(STATUS_LED_PIN, LOW);
 
@@ -75,3 +86,4 @@ void loop() {
     digitalWrite(STEP_PIN, LOW);
   }
 }
+
