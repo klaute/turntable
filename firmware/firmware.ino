@@ -1,4 +1,6 @@
 
+//*************************************************************************//
+
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
@@ -6,20 +8,35 @@
 
 #include "config.h"
 
-/**
- * Whishlist:
- * - Webserver for turntable control
- * - OTA firmware update
- * 
- */
+//*************************************************************************//
 
-uint8_t  ms_bm        = 0x00;
-uint16_t delay_ms_u16 = 100;
-boolean  dir_b        = true;
-boolean  enabled_b    = true;
+uint16_t delay_between_us_u16 =  20;
+uint16_t delay_after_ms_u16   = 250;
+
+//*************************************************************************//
+
+uint8_t  ms_bm_u8           = 0x00; // ms1-3 bits
+boolean  dir_b              = true;
+boolean  enabled_b          = true;
+
+String localIP = "127.0.0.1";
+
+//*************************************************************************//
+
+String html_default_header_s = "HTTP/1.1 200 OK\nContent-Type: text/html\n"
+"Access-Control-Allow-Origin: *\n"
+"Access-Control-Allow-Methods: *\n"
+"Connection: close\n\n";
+String html_status_start_s = "<html><head></head><body>\n";
+String html_status_end_s  = "</body></html>\n";
+String html_status_ok_s = html_status_start_s + "OK" + html_status_end_s;
+
+//*************************************************************************//
 
 WiFiManager wifiManager;
-WiFiServer server(80); //Initialize the server on Port 80
+WiFiServer server(80); // Initialize the server on Port 80
+
+//*************************************************************************//
 
 void setup()
 {
@@ -32,11 +49,11 @@ void setup()
   
   // Pin settings
   pinMode(STATUS_LED_PIN, OUTPUT);
-  pinMode(MS1_PIN, OUTPUT);
-  pinMode(MS2_PIN, OUTPUT);
-  pinMode(MS3_PIN, OUTPUT);
+  pinMode(MS1_PIN,  OUTPUT);
+  pinMode(MS2_PIN,  OUTPUT);
+  pinMode(MS3_PIN,  OUTPUT);
   pinMode(STEP_PIN, OUTPUT);
-  pinMode(DIR_PIN, OUTPUT);
+  pinMode(DIR_PIN,  OUTPUT);
 
   // Establish WiFi connection
   String wifiName = "turntable-" + String(ESP.getChipId());
@@ -56,52 +73,183 @@ void setup()
 
   server.begin(); // Start the HTTP Server
 
+  localIP = WiFi.localIP().toString();
+
+  // set the new settings
+  digitalWrite(MS1_PIN, (ms_bm_u8 & 0x01) ? HIGH : LOW);
+  digitalWrite(MS2_PIN, (ms_bm_u8 & 0x02) ? HIGH : LOW);
+  digitalWrite(MS3_PIN, (ms_bm_u8 & 0x04) ? HIGH : LOW);
+
+  digitalWrite(DIR_PIN, (dir_b == true ? HIGH : LOW));
+
   digitalWrite(STATUS_LED_PIN, LOW);
+}
+
+//*************************************************************************//
+
+void doWebserver()
+{
+  WiFiClient client = server.available();
+  if (client)
+  {
+    String request = client.readStringUntil('\r');
+    boolean dir_old_b = dir_b;
+    uint8_t ms_old_bm_u8 = ms_bm_u8;
+
+    if (request.indexOf("/EN") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Rotation enabled");
+#endif
+      enabled_b = true;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+    } else if (request.indexOf("/DIS") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Rotation disabled");
+#endif
+      enabled_b = false;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+    } else if (request.indexOf("/INC_DLY_BT") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Increase delay between");
+#endif
+      if (delay_between_us_u16 <= 950)
+        delay_between_us_u16 += 10;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+    } else if (request.indexOf("/DEC_DLY_BT") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Decrease delay between");
+#endif
+      if (delay_between_us_u16 >= 20)
+        delay_between_us_u16 -= 10;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+    } else if (request.indexOf("/INC_DLY_AF") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Increase delay after");
+#endif
+      if (delay_after_ms_u16 <= 950)
+        delay_after_ms_u16 += 50;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+    } else if (request.indexOf("/DEC_DLY_AF") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Decrease delay after");
+#endif
+      if (delay_after_ms_u16 >= 100)
+        delay_after_ms_u16 -= 50;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+    } else if (request.indexOf("/DIR_H") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Direction right");
+#endif
+      dir_b = true;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+    } else if (request.indexOf("/DIR_L") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Direction left");
+#endif
+      dir_b = false;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+    } else if (request.indexOf("/MS_BM_") != -1)
+    {
+      uint16_t start = request.indexOf("/MS_BM_") + 7;
+      String tstr = request.substring(start, start+3);
+      ms_bm_u8  = tstr.substring(0,1).toInt();
+      ms_bm_u8 += tstr.substring(1,2).toInt() << 1;
+      ms_bm_u8 += tstr.substring(2,3).toInt() << 2;
+      client.print(html_default_header_s);
+      client.print(html_status_ok_s);
+
+#ifdef DEBUG
+      Serial.println("MS bitmask " + tstr + " " + String(ms_bm_u8));
+#endif
+    } else if (request.indexOf("/STAT") != -1)
+    {
+#ifdef DEBUG
+      Serial.println("Get status");
+#endif
+      // TODO return the status
+      client.print(html_default_header_s);
+      //client.print(html_status_start_s);
+      client.println(String(enabled_b)            + ";" +
+                     String(ms_bm_u8)             + ";" +
+                     String(dir_b)                + ";" +
+                     String(delay_between_us_u16) + ";" +
+                     String(delay_after_ms_u16));
+      //client.println(html_status_end_s);
+
+    } else {
+      client.print(html_default_header_s);
+      printHTMLCtrlPanel(client, localIP);
+    }
+
+    // set the new settings
+    if (ms_old_bm_u8 != ms_bm_u8)
+    {
+      digitalWrite(MS1_PIN, (ms_bm_u8 & 0x01) ? HIGH : LOW);
+      digitalWrite(MS2_PIN, (ms_bm_u8 & 0x02) ? HIGH : LOW);
+      digitalWrite(MS3_PIN, (ms_bm_u8 & 0x04) ? HIGH : LOW);
+    }
+
+    if (dir_old_b != dir_b)
+      digitalWrite(DIR_PIN, (dir_b == true ? HIGH : LOW));
+  }
 }
 
 void loop()
 {
-  
-  WiFiClient client = server.available();
-  if (client)
-  { 
-    // TODO process the webserver settings (parallalize it)
-    String request = client.readStringUntil('\r');
-    if (request.indexOf("/EN") != -1)
-    {
-      Serial.println("Enable rotation");
-      enabled_b = true;
-    } else if (request.indexOf("/DIS") != -1)
-    {
-      Serial.println("Disable rotation");
-      enabled_b = false;
-    }
-  } 
+  doWebserver();
 
-  digitalWrite(STATUS_LED_PIN, LOW);
+  //Serial.println(">>"+);
 
 #ifdef DEBUG
   static uint16_t time_ms_u16 = 0;
-  if (time_ms_u16 > 2000)
+  if (time_ms_u16 >= STATUS_OUTPUT_DELAY_MS)
   {
     time_ms_u16 = 0;
-    Serial.println("Status: " + String(enabled_b) + " " + String(ms_bm) + " " + String(dir_b) + " " + String(delay_ms_u16));
+    Serial.println("Status: " + String(enabled_b) + " " + String(ms_bm_u8)
+                   + " " + String(dir_b) + " " + String(delay_between_us_u16)
+                   + " " + String(delay_after_ms_u16));
   }
-  time_ms_u16 += delay_ms_u16;
+  time_ms_u16 += delay_after_ms_u16;
 #endif
-
-  digitalWrite(MS1_PIN,  ((ms_bm & 0x01)       ? HIGH : LOW));
-  digitalWrite(MS2_PIN, (((ms_bm & 0x01) >> 1) ? HIGH : LOW));
-  digitalWrite(MS3_PIN, (((ms_bm & 0x02) >> 2) ? HIGH : LOW));
-
-  digitalWrite(DIR_PIN, (dir_b == true ? HIGH : LOW));
 
   if (enabled_b == true)
   {
     digitalWrite(STEP_PIN, HIGH);
-    delay(delay_ms_u16);
+
+    delayMicroseconds(delay_between_us_u16);
+
     digitalWrite(STEP_PIN, LOW);
+#ifdef DEBUG
+    //Serial.print(".");
+#endif
   }
+
+  delay(delay_after_ms_u16);
 }
 
+//*************************************************************************//
 

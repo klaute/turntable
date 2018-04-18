@@ -1,0 +1,172 @@
+<html>
+<head>
+<title>Turntable Control Panel</title>
+</head>
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<script type="text/javascript">
+
+  var debug = false;
+  var tt_statusUpdate_delay_ms = 2000;
+  var tt_timerId = setTimeout(tt_getStatus, tt_statusUpdate_delay_ms);
+
+  function tt_getStatus()
+  {
+    // TODO read the status from the device
+    getURLData(getBaseURL() + "/STAT");
+
+    if (document.getElementById("hidden_data_div").html)
+    {
+      updateStatusView("Status: " + document.getElementById("hidden_data_div").html);
+    }
+
+    tt_timerId = setTimeout(tt_getStatus, tt_statusUpdate_delay_ms);
+  }
+
+  function updateStatusView(t)
+  {
+    if (debug)
+    {
+      document.getElementById("systemStatus").value = t + "\n" + document.getElementById("systemStatus").value;
+    } else {
+      document.getElementById("systemStatus").value = t;
+    }
+  }
+  
+  function getBaseURL()
+  {
+    return document.getElementById("baseURL").value;
+  }
+
+  // Reload the data cyclic
+  function tt_setTurning(state)
+  {
+    if (state == 1)
+    {
+      callURL(getBaseURL() + '/EN');
+    } else {
+      callURL(getBaseURL() + '/DIS');
+    }
+  }
+
+  function tt_setTurnDir(state)
+  {
+    if (state == 1)
+    {
+      callURL(getBaseURL() + '/DIR_H');
+    } else {
+      callURL(getBaseURL() + '/DIR_L');
+    }
+  }
+
+  function tt_incDelayBetween()
+  {
+    callURL(getBaseURL() + '/INC_DLY_BT');
+  }
+
+  function tt_decDelayBetween()
+  {
+    callURL(getBaseURL() + '/DEC_DLY_BT');
+  }
+
+  function tt_incDelayAfter()
+  {
+    callURL(getBaseURL() + '/INC_DLY_AF');
+  }
+
+  function tt_decDelayAfter()
+  {
+    callURL(getBaseURL() + '/DEC_DLY_AF');
+  }
+
+  function tt_updateMS123State()
+  {
+    var ms1 = document.getElementById("ms1").checked ? 1 : 0;
+    var ms2 = document.getElementById("ms2").checked ? 1 : 0;
+    var ms3 = document.getElementById("ms3").checked ? 1 : 0;
+    callURL(getBaseURL() + '/MS_BM_' + ms1 + ms2 + ms3);
+  }
+
+  function callURL(u)
+  {
+    //alert(u);
+    $("#hiddenframe").load(u, function()
+      {
+        if (debug)
+        {
+          updateStatusView("call OK: " + u);
+        }
+      }
+    );
+  }
+
+  function getURLData(u)
+  {
+    
+    $.get(u, function(data)
+      {
+        if (debug)
+        {
+          updateStatusView("get OK: " + u);
+        }
+        tmp_data = data;
+        document.getElementById("hidden_data_div").html = data.replace(/(\r\n\t|\n|\r\t)/gm,"");; // update the hidden status div
+      }
+    );
+  }
+
+  function setDebugMode()
+  {
+    debug = document.getElementById("debug").checked;
+  }
+
+</script>
+
+<body>
+
+<br>
+
+<input id="baseURL" type="text" value="http://192.168.178.43/">
+
+<br>
+
+<button id="enable" onclick="tt_setTurning(1);">enable</button>
+<button id="disable" onclick="tt_setTurning(0);">disable</button>
+
+<br>
+
+<button id="left" onclick="tt_setTurnDir(0);">left</button>
+<button id="right" onclick="tt_setTurnDir(1);">right</button>
+
+<br>
+
+<button id="inc_dly_bt" onclick="tt_incDelayBetween();">inc. delay between</button>
+<button id="dec_dly_bt" onclick="tt_decDelayBetween();">dec. delay between</button>
+
+<br>
+
+<button id="inc_dly_af" onclick="tt_incDelayAfter();">inc. delay after</button>
+<button id="dec_dly_af" onclick="tt_decDelayAfter();">dec. delay after</button>
+
+<br>
+<table>
+<tr><td>MS1</td><td>MS2</td><td>MS3</td></tr>
+<tr>
+  <td><input type="checkbox" id="ms1" onclick="tt_updateMS123State();"></td>
+  <td><input type="checkbox" id="ms2" onclick="tt_updateMS123State();"></td>
+  <td><input type="checkbox" id="ms3" onclick="tt_updateMS123State();"></td>
+</tr>
+
+<br>
+
+<textarea type="textfield" id="systemStatus" value="" rows="4" cols="50"></textarea>
+
+<br>
+
+Debug mode: <input type="checkbox" id="debug" onclick="setDebugMode();">
+
+<div style="display: none;" width="1px" height="1px" id='hidden_data_div'>&nbsp;</div>
+<div style="display: none;" id="hiddenframe"></div>
+</body>
+</html>
