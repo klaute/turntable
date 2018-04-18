@@ -10,8 +10,8 @@
 
 //*************************************************************************//
 
-uint16_t delay_between_us_u16 =  20;
-uint16_t delay_after_ms_u16   = 250;
+uint16_t delay_between_us_u16 =  5;
+uint16_t delay_after_ms_u16   = 10;
 
 //*************************************************************************//
 
@@ -139,8 +139,8 @@ void doWebserver()
 #ifdef DEBUG
       Serial.println("Increase delay after");
 #endif
-      if (delay_after_ms_u16 <= 950)
-        delay_after_ms_u16 += 50;
+      if (delay_after_ms_u16 <= 995)
+        delay_after_ms_u16 += 5;
       client.print(html_default_header_s);
       client.print(html_status_ok_s);
 
@@ -149,15 +149,15 @@ void doWebserver()
 #ifdef DEBUG
       Serial.println("Decrease delay after");
 #endif
-      if (delay_after_ms_u16 >= 100)
-        delay_after_ms_u16 -= 50;
+      if (delay_after_ms_u16 >= 10)
+        delay_after_ms_u16 -= 5;
       client.print(html_default_header_s);
       client.print(html_status_ok_s);
 
     } else if (request.indexOf("/DIR_H") != -1)
     {
 #ifdef DEBUG
-      Serial.println("Direction right");
+      Serial.println("Direction left");
 #endif
       dir_b = true;
       client.print(html_default_header_s);
@@ -166,7 +166,7 @@ void doWebserver()
     } else if (request.indexOf("/DIR_L") != -1)
     {
 #ifdef DEBUG
-      Serial.println("Direction left");
+      Serial.println("Direction right");
 #endif
       dir_b = false;
       client.print(html_default_header_s);

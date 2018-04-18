@@ -7,7 +7,7 @@ void printHTMLCtrlPanel(WiFiClient client, String ip)
   client.println("<title>Turntable Control Panel</title>");
   client.println("</head>");
   client.println("<script src=\"https://code.jquery.com/jquery-3.3.1.min.js\"></script>");
-  client.println("<script type=\"text/javascript\">var debug=false;var tt_statusUpdate_delay_ms=10000;var tt_timerId=setTimeout(tt_getStatus,tt_statusUpdate_delay_ms);function tt_getStatus(){getURLData(getBaseURL()+\"/STAT\");if(document.getElementById(\"hidden_data_div\").html){updateStatusView(\"Status: \"+document.getElementById(\"hidden_data_div\").html)}tt_timerId=setTimeout(tt_getStatus,tt_statusUpdate_delay_ms)}function updateStatusView(a){if(debug){document.getElementById(\"systemStatus\").value=a+\"\\n\"+document.getElementById(\"systemStatus\").value}");
+  client.println("<script type=\"text/javascript\">var debug=false;var tt_statusUpdate_delay_ms=3000;var tt_timerId=setTimeout(tt_getStatus,10000);function tt_getStatus(){getURLData(getBaseURL()+\"/STAT\");if(document.getElementById(\"hidden_data_div\").html){updateStatusView(\"Status: \"+document.getElementById(\"hidden_data_div\").html)}tt_timerId=setTimeout(tt_getStatus,tt_statusUpdate_delay_ms)}function updateStatusView(a){if(debug){document.getElementById(\"systemStatus\").value=a+\"\\n\"+document.getElementById(\"systemStatus\").value}");
   client.println("else{document.getElementById(\"systemStatus\").value=a}}function getBaseURL(){return document.getElementById(\"baseURL\").value}function");
   client.println(" tt_setTurning(a){if(a==1){callURL(getBaseURL()+\"/EN\")}else{callURL(getBaseURL()+\"/DIS\")}}function tt_setTurnDir(a){if(a==1){callURL(getBaseURL()+\"/DIR_H\")}else{callURL(getBaseURL()+\"/DIR_L\")}}function tt_incDelayBetween(){callURL(getBaseURL()+\"/INC_DLY_BT\")}function tt_decDelayBetween(){callURL(getBaseURL()+\"/DEC_DLY_BT\")}function tt_incDelayAfter(){callURL(getBaseURL()+\"/INC_DLY_AF\")}function tt_decDelayAfter(){callURL(getBaseURL()+\"/DEC_DLY_AF\")}function tt_updateMS123State(){var c=document.getElementById(\"ms1\").checked?1:0;var ");
   client.println("b=document.getElementById(\"ms2\").checked?1:0;var a=document.getElementById(\"ms3\").checked?1:0;callURL(getBaseURL()+\"/MS_BM_\"+c+b+a)}function callURL(a){$(\"#hiddenframe\").load(a,function(){if(debug){updateStatusView(\"call OK: \"+a)}})}function getURLData(a){$.get(a,function(b){if(debug){updateStatusView(\"get OK: \"+a)}tmp_data=b;document.getElementById(\"hidden_data_div\").html=b.replace(/(\\r\\n\\t|\\n|\\r\\t)/gm,\"\")})}function setDebugMode(){debug=document.getElementById(\"debug\").checked};</script>");
@@ -18,8 +18,8 @@ void printHTMLCtrlPanel(WiFiClient client, String ip)
   client.println("<button id=\"enable\" onclick=\"tt_setTurning(1)\">enable</button>");
   client.println("<button id=\"disable\" onclick=\"tt_setTurning(0)\">disable</button>");
   client.println("<br>");
-  client.println("<button id=\"left\" onclick=\"tt_setTurnDir(0)\">left</button>");
-  client.println("<button id=\"right\" onclick=\"tt_setTurnDir(1)\">right</button>");
+  client.println("<button id=\"right\" onclick=\"tt_setTurnDir(0)\">right</button>");
+  client.println("<button id=\"left\" onclick=\"tt_setTurnDir(1)\">left</button>");
   client.println("<br>");
   client.println("<button id=\"inc_dly_bt\" onclick=\"tt_incDelayBetween()\">inc. delay between</button>");
   client.println("<button id=\"dec_dly_bt\" onclick=\"tt_decDelayBetween()\">dec. delay between</button>");
