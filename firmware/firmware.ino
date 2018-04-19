@@ -10,8 +10,8 @@
 
 //*************************************************************************//
 
-uint16_t delay_between_us_u16 =  5;
-uint16_t delay_after_ms_u16   = 10;
+uint16_t delay_between_us_u16 =  1;
+uint16_t delay_after_ms_u16   = 40;
 
 //*************************************************************************//
 
@@ -119,8 +119,8 @@ void doWebserver()
 #ifdef DEBUG
       Serial.println("Increase delay between");
 #endif
-      if (delay_between_us_u16 <= 950)
-        delay_between_us_u16 += 10;
+      if (delay_between_us_u16 <= 199)
+        delay_between_us_u16 += 1;
       client.print(html_default_header_s);
       client.print(html_status_ok_s);
 
@@ -129,8 +129,8 @@ void doWebserver()
 #ifdef DEBUG
       Serial.println("Decrease delay between");
 #endif
-      if (delay_between_us_u16 >= 20)
-        delay_between_us_u16 -= 10;
+      if (delay_between_us_u16 >= 2)
+        delay_between_us_u16 -= 1;
       client.print(html_default_header_s);
       client.print(html_status_ok_s);
 
