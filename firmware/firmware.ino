@@ -58,18 +58,37 @@ void setup()
   // Establish WiFi connection
   String wifiName = "turntable-" + String(ESP.getChipId());
   wifiManager.setMinimumSignalQuality(15);
-  if (!wifiManager.autoConnect(wifiName.c_str(), "DEADBEEF")) {
-    #ifdef DEBUG
-      Serial.println("WiFi connection failed, we reboot ...");
-    #endif
-      ESP.reset();
-      delay(1000);
+  if (!wifiManager.autoConnect(wifiName.c_str(), "DEADBEEF"))
+  {
+#ifdef DEBUG
+    Serial.println("WiFi connection failed, we reboot ...");
+#endif
+    ESP.reset();
+    delay(1000);
   }
 #ifdef DEBUG
   Serial.println("Connected!");
 #endif
 
   delay(100);
+
+  // only do once after the first flashing of the mcu
+  /*
+  setTTEEPDefaultCfg(0);
+  setTTEEPDefaultCfg(1);
+  setTTEEPDefaultCfg(2);
+  saveTTEEPConfig();
+  */
+
+  loadTTEEPConfig();
+
+  tt_eep_configData_t tmp_eep_config = getTTEEPConfig(0);
+
+  enabled_b            = tmp_eep_config.enabled_on_start_b;
+  dir_b                = tmp_eep_config.dir_in_start_b;
+  delay_after_ms_u16   = tmp_eep_config.delay_after_ms_u16;
+  delay_between_us_u16 = tmp_eep_config.delay_between_us_u16;
+  ms_bm_u8             = tmp_eep_config.ms_bm_u8;
 
   server.begin(); // Start the HTTP Server
 
@@ -200,6 +219,56 @@ void doWebserver()
                      String(delay_after_ms_u16));
       //client.println(html_status_end_s);
 
+    } else if (request.indexOf("/SAVE_") != -1)
+    {
+      uint16_t start = request.indexOf("/SAVE_") + 6;
+      String tstr = request.substring(start, start + 1);
+      uint8_t idx_u8 = tstr.substring(0,1).toInt();
+      if (idx_u8 <= TT_EEP_CFG_IDX_MAX)
+      {
+        client.print(html_default_header_s);
+        client.print(html_status_ok_s);
+
+        tt_eep_configData_t cfg;
+        cfg.enabled_on_start_b   = enabled_b;
+        cfg.dir_in_start_b       = dir_b;
+        cfg.delay_after_ms_u16   = delay_after_ms_u16;
+        cfg.delay_between_us_u16 = delay_between_us_u16;
+        cfg.ms_bm_u8             = ms_bm_u8;
+
+        setTTEEPConfig(cfg, idx_u8);
+        saveTTEEPConfig();
+        
+#ifdef DEBUG
+        Serial.println("Saving EEPROM config with index " + String(idx_u8));
+      } else {
+        Serial.println("Invalid EEPROM index " + String(idx_u8));
+#endif
+      }
+    } else if (request.indexOf("/LOAD_") != -1)
+    {
+      uint16_t start = request.indexOf("/LOAD_") + 6;
+      String tstr = request.substring(start, start + 1);
+      uint8_t idx_u8 = tstr.substring(0,1).toInt();
+      if (idx_u8 <= TT_EEP_CFG_IDX_MAX)
+      {
+        client.print(html_default_header_s);
+        client.print(html_status_ok_s);
+
+        loadTTEEPConfig();
+        tt_eep_configData_t cfg = getTTEEPConfig(idx_u8);
+        enabled_b            = cfg.enabled_on_start_b;
+        dir_b                = cfg.dir_in_start_b;
+        delay_after_ms_u16   = cfg.delay_after_ms_u16;
+        delay_between_us_u16 = cfg.delay_between_us_u16;
+        ms_bm_u8             = cfg.ms_bm_u8;
+        
+#ifdef DEBUG
+        Serial.println("Loading EEPROM config with index " + String(idx_u8));
+      } else {
+        Serial.println("Invalid EEPROM index " + String(idx_u8));
+#endif
+      }
     } else {
       client.print(html_default_header_s);
       printHTMLCtrlPanel(client, localIP);
