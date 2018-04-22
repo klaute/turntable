@@ -2,7 +2,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-//#define DEBUG 1
+#define DEBUG 1
 
 #define TT_EEP_CFG_IDX_MAX 2
 

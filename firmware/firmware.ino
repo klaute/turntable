@@ -243,12 +243,7 @@ void doWebserver()
         
 #ifdef DEBUG
         Serial.println("Saving EEPROM config with index " + String(idx_u8));
-      } else if (request.indexOf("/WU") != -1)
-      {
-        setupWebUpdater();
-        webUpdaterEnabled_b = true;
       } else {
-      }
         Serial.println("Invalid EEPROM index " + String(idx_u8));
 #endif
       }
@@ -276,7 +271,11 @@ void doWebserver()
         Serial.println("Invalid EEPROM index " + String(idx_u8));
 #endif
       }
-    } else {
+    } else if (request.indexOf("/WU") != -1)
+    {
+        setupWebUpdater();
+        webUpdaterEnabled_b = true;
+    }  else {
       client.print(html_default_header_s);
       printHTMLCtrlPanel(client, localIP);
     }

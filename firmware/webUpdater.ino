@@ -41,7 +41,7 @@ void setupWebUpdater(void)
 
   MDNS.addService("http", "tcp", 80);
 #ifdef DEBUG
-  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", host);
+  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", wu_host);
 #endif
 }
 
