@@ -22,7 +22,7 @@ void printHTMLCtrlPanel(WiFiClient client, String ip)
   client.println("function callURL(a){$(\"#hiddenframe\").load(a,function(){if(debug){updateStatusView(\"call OK: \"+a)}})}");
   client.println("function getURLData(a){$.get(a,function(b){if(debug){updateStatusView(\"get OK: \"+a)}tmp_data=b;document.getElementById(\"hidden_data_div\").html=b.replace(/(\\r\\n\\t|\\n|\\r\\t)/gm,\"\")})}function setDebugMode(){debug=document.getElementById(\"debug\").checked};");
   client.println("function tt_saveCfg(){callURL(getBaseURL()+\"/SAVE_\"+document.getElementById(\"idx\").value);}function tt_loadCfg(){callURL(getBaseURL()+\"/LOAD_\"+document.getElementById(\"idx\").value);}");
-  client.println("function tt_enableWebUpdate(){callURL(getBaseURL()+\"/WU\");}");
+  client.println("function tt_enableWebUpdate(){callURL(getBaseURL()+\"/WU\");window.open(\"http://"+ip+":8080/update\", \"_blank\");}");
   client.println("</script>");
   client.println("<body>");
   client.println("<br>");

@@ -10,11 +10,7 @@
 
 #include "config.h"
 
-const char* wu_host = "turntable-webupdate";
-const char* wu_ssid = "........";
-const char* wu_password = "........";
-
-ESP8266WebServer httpServer(80);
+ESP8266WebServer httpServer(8080);
 ESP8266HTTPUpdateServer httpUpdater;
 
 void setupWebUpdater(void)
@@ -23,23 +19,10 @@ void setupWebUpdater(void)
   Serial.println();
   Serial.println("Starting WebUpdater...");
 #endif
-  /*WiFi.mode(WIFI_AP_STA);
-  WiFi.begin(wu_ssid, wu_password);
-
-  while (WiFi.waitForConnectResult() != WL_CONNECTED)
-  {
-    WiFi.begin(wu_ssid, wu_password);
-#ifdef DEBUG
-    Serial.println("WiFi failed, retrying.");
-#endif
-  }*/
-
-  MDNS.begin(wu_host);
 
   httpUpdater.setup(&httpServer);
   httpServer.begin();
 
-  MDNS.addService("http", "tcp", 80);
 #ifdef DEBUG
   Serial.println("HTTPUpdateServer ready!");
 #endif
