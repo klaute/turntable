@@ -275,7 +275,7 @@ void doWebserver()
     {
         setupWebUpdater();
         webUpdaterEnabled_b = true;
-    }  else {
+    } else {
       client.print(html_default_header_s);
       printHTMLCtrlPanel(client, localIP);
     }

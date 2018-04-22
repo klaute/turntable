@@ -23,7 +23,7 @@ void setupWebUpdater(void)
   Serial.println();
   Serial.println("Starting WebUpdater...");
 #endif
-  WiFi.mode(WIFI_AP_STA);
+  /*WiFi.mode(WIFI_AP_STA);
   WiFi.begin(wu_ssid, wu_password);
 
   while (WiFi.waitForConnectResult() != WL_CONNECTED)
@@ -32,7 +32,7 @@ void setupWebUpdater(void)
 #ifdef DEBUG
     Serial.println("WiFi failed, retrying.");
 #endif
-  }
+  }*/
 
   MDNS.begin(wu_host);
 
@@ -41,7 +41,7 @@ void setupWebUpdater(void)
 
   MDNS.addService("http", "tcp", 80);
 #ifdef DEBUG
-  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", wu_host);
+  Serial.println("HTTPUpdateServer ready!");
 #endif
 }
 
