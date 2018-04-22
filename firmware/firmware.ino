@@ -10,16 +10,18 @@
 
 //*************************************************************************//
 
-uint16_t delay_between_us_u16 =  1;
-uint16_t delay_after_ms_u16   = 40;
+boolean webUpdaterEnabled_b = false;
+
+String localIP = "127.0.0.1";
 
 //*************************************************************************//
+
+uint16_t delay_between_us_u16 =  1;
+uint16_t delay_after_ms_u16   = 40;
 
 uint8_t  ms_bm_u8           = 0x00; // ms1-3 bits
 boolean  dir_b              = true;
 boolean  enabled_b          = true;
-
-String localIP = "127.0.0.1";
 
 //*************************************************************************//
 
@@ -73,12 +75,12 @@ void setup()
   delay(100);
 
   // only do once after the first flashing of the mcu
-  /*
+  /** /
   setTTEEPDefaultCfg(0);
   setTTEEPDefaultCfg(1);
   setTTEEPDefaultCfg(2);
   saveTTEEPConfig();
-  */
+  / **/
 
   loadTTEEPConfig();
 
@@ -241,7 +243,12 @@ void doWebserver()
         
 #ifdef DEBUG
         Serial.println("Saving EEPROM config with index " + String(idx_u8));
+      } else if (request.indexOf("/WU") != -1)
+      {
+        setupWebUpdater();
+        webUpdaterEnabled_b = true;
       } else {
+      }
         Serial.println("Invalid EEPROM index " + String(idx_u8));
 #endif
       }
@@ -289,6 +296,13 @@ void doWebserver()
 
 void loop()
 {
+
+  if (webUpdaterEnabled_b == true)
+  {
+    doWebUpdater();
+    return;
+  }
+
   doWebserver();
 
   //Serial.println(">>"+);
