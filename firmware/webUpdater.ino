@@ -30,6 +30,7 @@ void setupWebUpdater(void)
 
 void doWebUpdater(void)
 {
+  digitalWrite(D0, HIGH);
   httpServer.handleClient();
 }
 
